@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoniX Studios - Presentes Personalizados com IA</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        /* ===== LAYOUT GRADE DE PRODUTOS ===== */
+        .products {
+            background: linear-gradient(135deg, #1a0533 0%, #2d0a5e 50%, #1a0533 100%);
+            padding: 60px 20px;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 28px;
+            padding: 20px 0 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .product-card {
+            background: linear-gradient(145deg, #2a0d4a, #3d1470);
+            border: 1px solid rgba(180, 100, 255, 0.35);
+            border-radius: 20px;
+            padding: 0 0 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow:
+                0 0 30px rgba(140, 60, 255, 0.2),
+                0 16px 48px rgba(0, 0, 0, 0.45);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 0 50px rgba(160, 80, 255, 0.32),
+                0 24px 60px rgba(0, 0, 0, 0.5);
+        }
+        .product-card .product-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+            letter-spacing: 0.2px;
+            padding: 0 24px;
+        }
+        .product-card .product-description {
+            color: rgba(220, 190, 255, 0.82);
+            font-size: 0.93rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            flex: 1;
+            padding: 0 24px;
+        }
+        .product-card .product-price {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #d8b4fe;
+            margin-bottom: 16px;
+            padding: 0 24px;
+        }
+        .buy-button-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: auto;
+            width: 100%;
+            padding: 0 24px;
+        }
+        .btn-buy {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+        }
+        .btn-buy:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(168, 85, 247, 0.55);
+        }
+
+        /* ===== SEÇÃO DE CHECKOUT ===== */
+        .checkout-section {
+            background: linear-gradient(135deg, #0f0420 0%, #1a0533 100%);
+            padding: 70px 20px;
+        }
+        .checkout-box {
+            max-width: 560px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #2a0d4a, #3d1470);
+            border: 1px solid rgba(180, 100, 255, 0.35);
+            border-radius: 24px;
+            padding: 36px 28px;
+            box-shadow: 0 0 40px rgba(140, 60, 255, 0.25), 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .cart-summary {
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(180, 100, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .cart-summary h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            margin: 0 0 14px;
+            text-align: center;
+        }
+        .cart-empty {
+            color: rgba(220, 190, 255, 0.7);
+            font-size: 0.92rem;
+            text-align: center;
+            margin: 0;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(180, 100, 255, 0.3);
+        }
+        .cart-total span {
+            color: rgba(220, 190, 255, 0.85);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cart-total strong {
+            color: #d8b4fe;
+            font-size: 1.4rem;
+        }
+
+        /* Mensagem ao adicionar/remover do carrinho */
+        .cart-message {
+            max-width: 1100px;
+            margin: 0 auto 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 10px 18px;
+            border-radius: 12px;
+        }
+        .cart-message.success {
+            color: #86efac;
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+        }
+        .cart-message.error {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(252, 165, 165, 0.3);
+        }
+
+        /* Botão "Finalizar pedido" */
+        .finish-order-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .checkout-form input {
+            width: 100%;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(180, 100, 255, 0.35);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .checkout-form input::placeholder {
+            color: rgba(220, 190, 255, 0.5);
+        }
+        .checkout-form input:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25);
+        }
+        #startPaymentButton {
+            width: 100%;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin: 6px 0 20px;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+            transition: transform 0.2s ease;
+        }
+        #startPaymentButton:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+        #startPaymentButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #paymentBrick_container {
+            min-height: 10px;
+        }
+        .checkout-message {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 0.95rem;
+            color: #fca5a5;
+        }
+        .checkout-message.success {
+            color: #86efac;
+        }
+
+        /* ===== RESULTADO PIX ===== */
+        .pix-result {
+            margin-top: 24px;
+            padding: 22px 20px;
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(180, 100, 255, 0.35);
+            border-radius: 16px;
+            text-align: center;
+        }
+        .pix-result h3 {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+        }
+        .pix-result p {
+            color: rgba(220, 190, 255, 0.82);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        #pix-code {
+            margin-top: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(180, 100, 255, 0.35);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-size: 0.85rem;
+            padding: 12px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        #copy-pix-code {
+            width: 100%;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin: 14px 0 12px;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+            transition: transform 0.2s ease;
+        }
+        #copy-pix-code:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+        #pix-status-message {
+            font-size: 0.85rem !important;
+            color: rgba(220, 190, 255, 0.65) !important;
+        }
+
+        /* Responsivo mobile */
+        @media (max-width: 600px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .product-card {
+                padding: 0 0 24px;
+            }
+            .product-card .product-name {
+                font-size: 1.15rem;
+            }
+            .checkout-box {
+                padding: 28px 18px;
+                border-radius: 18px;
+            }
+            .finish-order-wrapper .btn-large {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== PIXEL DA META - EDITAR AQUI ===== -->
+    <!-- Substitua SEU_PIXEL_ID pelo ID do seu Pixel da Meta -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        // fbq('init', 'SEU_PIXEL_ID'); // DESCOMENTE e coloque seu ID
+        fbq('init', '0000000000'); // Placeholder - SUBSTITUIR
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=SEU_PIXEL_ID&ev=PageView&noscript=1" /></noscript>
+    <!-- ===== FIM PIXEL DA META ===== -->
+
+    <!-- ===== GOOGLE TAG MANAGER - EDITAR AQUI ===== -->
+    <!-- Substitua SEU_GTM_ID pelo seu ID do Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-XXXXXXX');</script> <!-- SUBSTITUIR GTM-XXXXXXX -->
+    <!-- ===== FIM GOOGLE TAG MANAGER ===== -->
+
+    <!-- HEADER/NAVEGAÇÃO -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <span class="logo-icon">♪</span>
+                <h1>SoniX Studios</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== SEÇÃO INICIAL COM VÍDEO ===== -->
+    <section class="hero" id="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2 class="hero-title">Presentes personalizados com IA para emocionar quem você ama</h2>
+                <p class="hero-subtitle">Escolha seu produto, faça o pagamento dentro do site com Pix ou cartão e volte para o WhatsApp para enviarmos tudo certinho.</p>
+
+                <!-- ÁREA DE VÍDEO - EDITAR AQUI -->
+                <div class="video-container">
+                    <div class="video-placeholder">
+                        <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <p>Clique para assistir ao vídeo</p>
+                    </div>
+                    <!-- SUBSTITUIR ESTE LINK: https://www.youtube.com/embed/SEU_VIDEO_ID -->
+                    <iframe class="video-iframe" src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                            title="SoniX Studios - Apresentação" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen style="display:none;"></iframe>
+                </div>
+
+                <button class="btn btn-primary btn-large" id="btnEscolherPresente">
+                    Escolher meu presente
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SEÇÃO DE PRODUTOS ===== -->
+    <section class="products" id="products">
+        <div class="container">
+            <h2 class="section-title">Escolha seu presente</h2>
+            <div class="products-grid">
+
+                <!-- 1. Música Personalizada -->
+                <div class="product-card">
+                    <img src="/assets/musica-personalizada.png" alt="Música Personalizada" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Música Personalizada</h3>
+                    <p class="product-description">Uma música exclusiva criada com os detalhes da sua história. Perfeita para homenagens, casais, aniversários, reconciliação e momentos especiais.</p>
+                    <p class="product-price">R$ 19,99</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="musica">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 2. Foto com IA -->
+                <div class="product-card">
+                    <img src="/assets/foto-com-ia.png" alt="Foto com IA" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Foto com IA</h3>
+                    <p class="product-description">Uma imagem personalizada feita com inteligência artificial, criada especialmente para emocionar quem você ama.</p>
+                    <p class="product-price">R$ 10,90</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="foto_ia">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 3. Cartão Digital -->
+                <div class="product-card">
+                    <img src="/assets/cartao-digital.png" alt="Cartão Digital" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Cartão Digital</h3>
+                    <p class="product-description">Um cartão bonito e personalizado para enviar em datas especiais e surpreender quem você ama.</p>
+                    <p class="product-price">R$ 10,90</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="cartao_digital">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 4. Vídeo com Fotos -->
+                <div class="product-card">
+                    <img src="/assets/video-com-fotos.png" alt="Vídeo com Fotos" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Vídeo com Fotos</h3>
+                    <p class="product-description">Um vídeo emocionante com fotos, frases e estilo de homenagem, perfeito para reviver memórias especiais.</p>
+                    <p class="product-price">R$ 29,90</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="video_fotos">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 5. Correio Eletrônico -->
+                <div class="product-card">
+                    <img src="/assets/correio-eletronico.png" alt="Correio Eletrônico" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Correio Eletrônico</h3>
+                    <p class="product-description">Uma mensagem digital personalizada para surpreender alguém especial de forma bonita e memorável.</p>
+                    <p class="product-price">R$ 9,97</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="correio_eletronico">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 6. Álbum de Foto com 5 Fotos -->
+                <div class="product-card">
+                    <img src="/assets/album-5-fotos.png" alt="Álbum de Foto com 5 Fotos" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Álbum de Foto com 5 Fotos</h3>
+                    <p class="product-description">Pacote com 5 imagens personalizadas criadas com IA, organizado com layout bonito e pronto para compartilhar.</p>
+                    <p class="product-price">R$ 29,99</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="album_5">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 7. Álbum de Foto com 15 Fotos -->
+                <div class="product-card">
+                    <img src="/assets/album-15-fotos.png" alt="Álbum de Foto com 15 Fotos" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Álbum de Foto com 15 Fotos</h3>
+                    <p class="product-description">Pacote completo com 15 imagens personalizadas para contar toda a história de vocês.</p>
+                    <p class="product-price">R$ 69,99</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="album_15">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 8. Pacote Presente Completo -->
+                <div class="product-card">
+                    <img src="/assets/pacote-presente.png" alt="Pacote Presente Completo" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Pacote Presente Completo</h3>
+                    <p class="product-description">Inclui música personalizada, foto com IA e correio eletrônico reunidos em um único presente inesquecível.</p>
+                    <p class="product-price">R$ 35,90</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="pacote_presente">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+                <!-- 9. Convite Digital Personalizado -->
+                <div class="product-card">
+                    <img src="/assets/convite-digital.png" alt="Convite Digital Personalizado" class="product-image" onerror="this.style.display='none';">
+                    <h3 class="product-name">Convite Digital Personalizado</h3>
+                    <p class="product-description">Convite digital personalizado para aniversário, casamento ou evento especial. Impressione seus convidados.</p>
+                    <p class="product-price">R$ 14,99</p>
+                    <div class="buy-button-wrapper">
+                        <button class="btn-buy" data-id="convite">Adicionar ao carrinho</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="cartMessage" class="cart-message" style="display:none;"></div>
+
+            <div class="finish-order-wrapper">
+                <button class="btn btn-primary btn-large" id="btnFinalizarPedido">
+                    Finalizar pedido
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SEÇÃO DE CHECKOUT ===== -->
+    <section class="checkout-section" id="checkout-section">
+        <div class="container">
+            <h2 class="section-title">Finalize seu pedido</h2>
+            <div class="checkout-box">
+                <div id="cart-summary" class="cart-summary">
+                    <h3>Seu pedido</h3>
+
+                    <div id="cart-items"></div>
+
+                    <div class="cart-total">
+                        <span>Total:</span>
+                        <strong id="cart-total-value">R$ 0,00</strong>
+                    </div>
+                </div>
+
+                <div class="checkout-form">
+                    <input id="customerName" type="text" placeholder="Seu nome" />
+                    <input id="customerWhatsapp" type="text" placeholder="Seu WhatsApp" />
+                    <input id="customerEmail" type="email" placeholder="Seu e-mail" />
+                </div>
+
+                <button id="startPaymentButton">Gerar pagamento</button>
+
+                <div id="paymentBrick_container"></div>
+
+                <div id="pix-result" class="pix-result" style="display:none;">
+                    <h3>Pix gerado com sucesso!</h3>
+                    <p>Escaneie o QR Code ou copie o código Pix abaixo.</p>
+
+                    <img id="pix-qr-code" alt="QR Code Pix" style="max-width:260px; width:100%; display:block; margin:20px auto;" />
+
+                    <textarea id="pix-code" readonly style="width:100%; min-height:120px;"></textarea>
+
+                    <button id="copy-pix-code" type="button">
+                        Copiar código Pix
+                    </button>
+
+                    <p id="pix-status-message">
+                        Após o pagamento, aguarde alguns segundos. Você será redirecionado automaticamente.
+                    </p>
+                </div>
+
+                <div id="checkoutMessage" class="checkout-message"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SEÇÃO FAQ ===== -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <h2 class="section-title">Perguntas Frequentes</h2>
+            <div class="faq-grid">
+                <!-- FAQ 1 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Como funciona?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Você escolhe o produto, faz o pagamento direto no site com Pix ou cartão e depois volta para o WhatsApp para enviar as informações do pedido.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Depois de pagar, o que eu faço?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Após o pagamento ser aprovado, você será enviado para uma página de obrigado com um botão para voltar ao WhatsApp e enviar o comprovante.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Quanto tempo demora para receber?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>O prazo pode variar conforme o produto, mas o atendimento será feito pelo WhatsApp após o envio do comprovante.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Preciso enviar fotos?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Apenas nos produtos que usam fotos, como Foto com IA, Vídeo com Fotos e Álbum de Fotos.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 5 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Posso pedir alteração?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sim, pequenos ajustes podem ser solicitados pelo WhatsApp.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 6 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Recebo por onde?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Você receberá seu pedido pelo WhatsApp.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 7 -->
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>O pagamento é seguro?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Sim, o pagamento é processado diretamente pelo Mercado Pago, dentro do próprio site, com Pix ou cartão de crédito.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RODAPÉ ===== -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 SoniX Studios. Todos os direitos reservados.</p>
+            <p class="footer-contact">WhatsApp: <a href="https://wa.me/5500000000000" target="_blank">Clique aqui</a> | E-mail: <a href="mailto:contato@sonixstudios.com">contato@sonixstudios.com</a></p>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="script.js"></script>
+
+</body>
+</html>
